@@ -1,0 +1,77 @@
+to connect with mysql(list databases)
+ sqoop list-databases --connect jdbc:mysql://localhost --username root --password '1234';
+list tables in a database
+-------------------------------------------
+
+sqoop list-tables --connect jdbc:mysql://localhost/college --username root --password '1234';
+import all tables of a database from mysql into hdfs
+------------------------------------------------
+
+ sqoop import-all-tables --connect jdbc:mysql://localhost/college --username root --password '1234' --warehouse-dir /niit/student_master
+since no mappers mentioned by default mappers = no of record
+
+
+Permission	Owner	Group	Size	Replication	Block Size	Name
+drwxr-xr-x	hduser	supergroup	0 B	0	0 B	fy -------------->2 records ---------->2 mappers
+drwxr-xr-x	hduser	supergroup	0 B	0	0 B	fy1
+drwxr-xr-x	hduser	supergroup	0 B	0	0 B	student_master------------>4 records ---------->4 mappers
+---------->topten table didnt import since it has no key
+
+/niit/student_master/fy
+Permission	Owner	Group	Size	Replication	Block Size	Name
+-rw-r--r--	hduser	supergroup	0 B	1	27 MB	_SUCCESS
+-rw-r--r--	hduser	supergroup	10 B	1	27 MB	part-m-00000
+-rw-r--r--	hduser	supergroup	10 B	1	27 MB	part-m-00001
+import a table of a particular database with where clause
+-----------------------------------
+ sqoop import --connect jdbc:mysql://localhost/college --username root --password '1234' --table student_master --where 'student_id=1 or student_id=3' --target-dir /niit/query1 -m 1;
+
+Permission	Owner	Group	Size	Replication	Block Size	Name
+-rw-r--r--	hduser	supergroup	0 B	1	27 MB	_SUCCESS
+-rw-r--r--	hduser	supergroup	36 B	1	27 MB	part-m-00000
+
+hadoop fs -cat /niit/query1/part-m-00000
+17/06/21 23:22:00 WARN util.NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+1,Sanjay,Bangalore
+3,Rajesh,Chennai
+import a mysql query based on a table from a database
+-----------------------------------------------------------------
+Beginning query import.
+--------------------------------------------------- 
+sqoop import --connect jdbc:mysql://localhost/college --username root --password '1234' --query 'select * from  student_master where $CONDITIONS and address = "Delhi"' --target-dir /niit/query2 -m 1;
+Query [select * from from student_master where address = Delhi] must contain '$CONDITIONS' in WHERE clause.
+ Retrieved 2 records.
+$ hadoop fs -cat /niit/query2/part-m-00000   17/06/21 23:36:05 WARN util.NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+2,Rajiv,Delhi
+4,sandeep,Delhi
+
+import a table from mysql to hive
+
+sqoop import --connect jdbc:mysql://localhost/college --username root --password '1234' --table student_master --hive-import --hive-table college.student_profile -m 1;
+Retrieved 4 records.
+ Loading uploaded data into Hive
+Loading data to table college.student_profile
+
+
+import fy table
+---------
+sqoop import --connect jdbc:mysql://localhost/college --username root --password '1234' --table fy --where 'student_id=1 and result=81.98' --target-dir /niit/queryfy -m 1;
+
+Retrieved 1 records.
+hadoop fs -cat /niit/queryfy/part-m-0000017/06/22 00:04:19 WARN util.NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+1,1,81.98
+import fy into hive
+sqoop import --connect jdbc:mysql://localhost/college --username root --password '1234' --table fy --hive-import --hive-table college.fy_profile -m 1;
+hadoop fs -cat /user/hive/warehouse/college.db/fy_profile/p*;17/06/22 00:09:29 WARN util.NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+1181.98
+2278.98
+increment clause
+sqoop import --connect jdbc:mysql://localhost/college --username root --password '1234' --table student_master -check-column student_id-incremental append --last-value 4 --target-dir /niit/student_master/student_maste
+ sqoop export --connect jdbc:mysql://localhost/employee --username root --password '1234' --table employee_master --update-mode updateonly --update-key employee_id --export-dir /niit/employee.txt --input-fields-terminated-by ',' ;
+sqoop export --connect jdbc:mysql://localhost/employee --username root --password '1234' --table employee_master --update-mode allowinsert --update-key employee_id --export-dir /niit/employee.txt --input-fields-terminated-by ',' ;
+
+
+
+
+
+
